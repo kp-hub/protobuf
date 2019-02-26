@@ -96,6 +96,25 @@ namespace Google.Protobuf
         }
 
         [Test]
+        public void PreserveProtoFieldNames()
+        {
+            var message = new TestAllTypes
+            {
+                SingleInt32 = 42,
+                SingleBool = true,
+                SingleString = "foo",
+            };
+            var formatter = new JsonFormatter(JsonFormatter.Settings.Default.WithPreserveProtoFieldNames(true));
+            var actualText = formatter.Format(message);
+            var expectedText = "{ " +
+                               "'single_int32': 42, " +
+                               "'single_bool': true, " +
+                               "'single_string': 'foo'" +
+                               " }";
+            AssertJson(expectedText, actualText);
+        }
+
+        [Test]
         public void AllSingleFields()
         {
             var message = new TestAllTypes

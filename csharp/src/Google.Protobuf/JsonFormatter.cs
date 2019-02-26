@@ -239,7 +239,9 @@ namespace Google.Protobuf
                     writer.Write(PropertySeparator);
                 }
 
-                WriteString(writer, accessor.Descriptor.JsonName);
+                var name = settings.PreserveProtoFieldNames ? accessor.Descriptor.Name : accessor.Descriptor.JsonName;
+
+                WriteString(writer, name);
                 writer.Write(NameValueSeparator);
                 WriteValue(writer, value);
 
@@ -808,6 +810,11 @@ namespace Google.Protobuf
             /// </summary>
             public bool FormatEnumsAsIntegers { get; }
 
+            /// <summary>
+            /// Whether to preserve proto field names.  Defaults to false.
+            /// </summary>
+            public bool PreserveProtoFieldNames { get; }
+
 
             /// <summary>
             /// Creates a new <see cref="Settings"/> object with the specified formatting of default values
@@ -836,11 +843,26 @@ namespace Google.Protobuf
             /// <param name="formatEnumsAsIntegers"><c>true</c> to format the enums as integers; <c>false</c> to format enums as enum names.</param>
             private Settings(bool formatDefaultValues,
                             TypeRegistry typeRegistry,
-                            bool formatEnumsAsIntegers)
+                            bool formatEnumsAsIntegers) : this(formatDefaultValues, typeRegistry, formatEnumsAsIntegers, false)
+            {
+            }
+
+            /// <summary>
+            /// Creates a new <see cref="Settings"/> object with the specified parameters.
+            /// </summary>
+            /// <param name="formatDefaultValues"><c>true</c> if default values (0, empty strings etc) should be formatted; <c>false</c> otherwise.</param>
+            /// <param name="typeRegistry">The <see cref="TypeRegistry"/> to use when formatting <see cref="Any"/> messages. TypeRegistry.Empty will be used if it is null.</param>
+            /// <param name="formatEnumsAsIntegers"><c>true</c> to format the enums as integers; <c>false</c> to format enums as enum names.</param>
+            /// <param name="preserveProtoFieldNames"><c>true</c> to use proto field name; <c>false</c> to use the lowerCamelCase JSON name.</param>
+            private Settings(bool formatDefaultValues,
+                            TypeRegistry typeRegistry,
+                            bool formatEnumsAsIntegers,
+                            bool preserveProtoFieldNames)
             {
                 FormatDefaultValues = formatDefaultValues;
                 TypeRegistry = typeRegistry ?? TypeRegistry.Empty;
                 FormatEnumsAsIntegers = formatEnumsAsIntegers;
+                PreserveProtoFieldNames = preserveProtoFieldNames;
             }
 
             /// <summary>
@@ -860,6 +882,12 @@ namespace Google.Protobuf
             /// </summary>
             /// <param name="formatEnumsAsIntegers"><c>true</c> to format the enums as integers; <c>false</c> to format enums as enum names.</param>
             public Settings WithFormatEnumsAsIntegers(bool formatEnumsAsIntegers) => new Settings(FormatDefaultValues, TypeRegistry, formatEnumsAsIntegers);
+
+            /// <summary>
+            /// Creates a new <see cref="Settings"/> object with the specified preserve proto field names option and the current settings.
+            /// </summary>
+            /// /// <param name="preserveProtoFieldNames"><c>true</c> to use proto field name; <c>false</c> to use the lowerCamelCase JSON name.</param>
+            public Settings WithPreserveProtoFieldNames(bool preserveProtoFieldNames) => new Settings(FormatDefaultValues, TypeRegistry, FormatEnumsAsIntegers, preserveProtoFieldNames);
         }
 
         // Effectively a cache of mapping from enum values to the original name as specified in the proto file,
